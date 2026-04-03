@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: var(--hyf-background);
+  color: var(--hyf-foreground);
+  font-family: var(--hyf-font-body), system-ui, sans-serif;
+}

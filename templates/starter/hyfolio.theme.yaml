@@ -1,0 +1,47 @@
+# This file is replaced by the chosen preset during create-hyfolio.
+# Edit this file to customize your design system.
+# Run "npx hyfolio build-theme" to regenerate theme.css.
+
+colors:
+  background: "#ffffff"
+  foreground: "#0a0a0a"
+  primary: "#2563eb"
+  primary-foreground: "#ffffff"
+  secondary: "#f4f4f5"
+  secondary-foreground: "#18181b"
+  muted: "#f4f4f5"
+  muted-foreground: "#71717a"
+  accent: "#f4f4f5"
+  destructive: "#ef4444"
+  border: "#e4e4e7"
+  ring: "#2563eb"
+
+typography:
+  fonts:
+    heading: "Inter"
+    body: "Inter"
+    mono: "JetBrains Mono"
+  scale:
+    base: 1rem
+
+spacing:
+  section-padding: 6rem
+  container-max: 1200px
+  container-padding: 1.5rem
+
+radius:
+  sm: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+
+dark:
+  colors:
+    background: "#0a0a0a"
+    foreground: "#fafafa"
+    primary: "#3b82f6"
+    primary-foreground: "#ffffff"
+    secondary: "#27272a"
+    secondary-foreground: "#fafafa"
+    muted: "#27272a"
+    muted-foreground: "#a1a1aa"
+    border: "#3f3f46"

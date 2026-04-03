@@ -1,0 +1,248 @@
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
+import YAML from 'yaml'
+import { themeSchema } from '@/theme/schema'
+
+describe('themeSchema', () => {
+  describe('colors', () => {
+    it('accepts valid hex colors', () => {
+      const input = buildMinimalTheme({
+        colors: {
+          background: '#ffffff',
+          foreground: '#0a0a0a',
+          primary: '#2563eb',
+          'primary-foreground': '#ffffff',
+          secondary: '#f4f4f5',
+          'secondary-foreground': '#18181b',
+          muted: '#f4f4f5',
+          'muted-foreground': '#71717a',
+          accent: '#f4f4f5',
+          destructive: '#ef4444',
+          border: '#e4e4e7',
+          ring: '#2563eb',
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects invalid color values', () => {
+      const input = buildMinimalTheme({
+        colors: {
+          ...buildMinimalTheme().colors,
+          primary: 'not-a-color',
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(false)
+    })
+
+    it('requires all color keys', () => {
+      const input = buildMinimalTheme({
+        colors: {
+          background: '#ffffff',
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('typography', () => {
+    it('validates heading size references scale keys', () => {
+      const input = buildMinimalTheme()
+      const theme = { ...input } as Record<string, unknown>
+      const typo = { ...(theme.typography as Record<string, unknown>) }
+      const headings = { ...(typo.headings as Record<string, unknown>) }
+      headings.h1 = { size: 'invalid-size', weight: 800 }
+      typo.headings = headings
+      theme.typography = typo
+      const result = themeSchema.safeParse(theme)
+      expect(result.success).toBe(false)
+    })
+
+    it('validates font weight range', () => {
+      const input = buildMinimalTheme()
+      const theme = { ...input } as Record<string, unknown>
+      const typo = { ...(theme.typography as Record<string, unknown>) }
+      const headings = { ...(typo.headings as Record<string, unknown>) }
+      headings.h1 = { size: '5xl', weight: 1200, tracking: 'tight' }
+      typo.headings = headings
+      theme.typography = typo
+      const result = themeSchema.safeParse(theme)
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('buttons', () => {
+    it('validates button radius references radius keys', () => {
+      const input = buildMinimalTheme({
+        buttons: {
+          ...buildMinimalTheme().buttons as Record<string, unknown>,
+          radius: 'invalid',
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('dark mode', () => {
+    it('accepts partial dark color overrides', () => {
+      const input = buildMinimalTheme({
+        dark: {
+          colors: {
+            background: '#0a0a0a',
+            foreground: '#fafafa',
+          },
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts theme without dark section', () => {
+      const input = buildMinimalTheme()
+      delete (input as Record<string, unknown>).dark
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects invalid hex in dark overrides', () => {
+      const input = buildMinimalTheme({
+        dark: {
+          colors: {
+            background: 'not-hex',
+          },
+        },
+      })
+      const result = themeSchema.safeParse(input)
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('preset validation', () => {
+    it('minimal.yaml passes schema validation', () => {
+      const yamlStr = readFileSync(
+        resolve(__dirname, '../../src/theme/presets/minimal.yaml'),
+        'utf-8'
+      )
+      const parsed = YAML.parse(yamlStr)
+      const result = themeSchema.safeParse(parsed)
+      expect(result.success).toBe(true)
+    })
+
+    it('bold.yaml passes schema validation', () => {
+      const yamlStr = readFileSync(
+        resolve(__dirname, '../../src/theme/presets/bold.yaml'),
+        'utf-8'
+      )
+      const parsed = YAML.parse(yamlStr)
+      const result = themeSchema.safeParse(parsed)
+      expect(result.success).toBe(true)
+    })
+
+    it('warm.yaml passes schema validation', () => {
+      const yamlStr = readFileSync(
+        resolve(__dirname, '../../src/theme/presets/warm.yaml'),
+        'utf-8'
+      )
+      const parsed = YAML.parse(yamlStr)
+      const result = themeSchema.safeParse(parsed)
+      expect(result.success).toBe(true)
+    })
+  })
+})
+
+function buildMinimalTheme(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    colors: {
+      background: '#ffffff',
+      foreground: '#0a0a0a',
+      primary: '#2563eb',
+      'primary-foreground': '#ffffff',
+      secondary: '#f4f4f5',
+      'secondary-foreground': '#18181b',
+      muted: '#f4f4f5',
+      'muted-foreground': '#71717a',
+      accent: '#f4f4f5',
+      destructive: '#ef4444',
+      border: '#e4e4e7',
+      ring: '#2563eb',
+    },
+    typography: {
+      fonts: { heading: 'Inter', body: 'Inter', mono: 'JetBrains Mono' },
+      scale: {
+        xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem',
+        xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem',
+        '5xl': '3rem', '6xl': '3.75rem',
+      },
+      headings: {
+        h1: { size: '5xl', weight: 800, tracking: 'tight' },
+        h2: { size: '4xl', weight: 700, tracking: 'tight' },
+        h3: { size: '2xl', weight: 600 },
+        h4: { size: 'xl', weight: 600 },
+        h5: { size: 'lg', weight: 600 },
+        h6: { size: 'base', weight: 600 },
+      },
+      'line-height': { tight: 1.2, normal: 1.5, relaxed: 1.75 },
+      'letter-spacing': { tight: '-0.025em', normal: '0', wide: '0.05em' },
+    },
+    spacing: {
+      'section-padding': '6rem',
+      'container-max': '1200px',
+      'container-padding': '1.5rem',
+    },
+    radius: {
+      sm: '0.25rem', md: '0.375rem', lg: '0.5rem',
+      xl: '0.75rem', '2xl': '1rem', full: '9999px',
+    },
+    shadows: {
+      sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+      lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+      xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+    },
+    transitions: {
+      fast: '150ms', normal: '250ms', slow: '400ms',
+      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    buttons: {
+      radius: 'md',
+      'font-weight': 500,
+      padding: { x: '1.5rem', y: '0.75rem' },
+      'font-size': 'sm',
+      primary: { background: 'primary', foreground: 'primary-foreground' },
+      secondary: { background: 'secondary', foreground: 'secondary-foreground' },
+      outline: { border: 'border' },
+      ghost: { 'hover-background': 'accent' },
+    },
+    cards: {
+      radius: 'lg', padding: '1.5rem', shadow: 'sm', border: true,
+    },
+    forms: {
+      'input-radius': 'md',
+      'input-padding': { x: '1rem', y: '0.75rem' },
+      'input-border': true,
+      'focus-ring-width': '2px',
+      'focus-ring-color': 'ring',
+    },
+    loaders: {
+      color: 'primary', size: '1.5rem', 'border-width': '2px', speed: '0.8s',
+      'page-loader': { background: 'background', style: 'spinner' },
+    },
+    badges: {
+      radius: 'full',
+      padding: { x: '0.75rem', y: '0.25rem' },
+      'font-size': 'xs',
+      'font-weight': 500,
+    },
+    layout: {
+      'default-text-align': 'left',
+      'hero-text-align': 'center',
+      'cta-text-align': 'center',
+    },
+    ...overrides,
+  }
+}
