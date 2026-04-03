@@ -111,7 +111,29 @@ export function getBlockMeta(slug: string): BlockMeta | null {
   if (!block) {
     return null
   }
-  return { ...block }
+  return {
+    ...block,
+    files: [...block.files],
+    dependencies: [...block.dependencies],
+    registryDependencies: [...block.registryDependencies],
+  }
+}
+
+function copyBlockMeta(b: BlockMeta): BlockMeta {
+  return {
+    ...b,
+    files: [...b.files],
+    dependencies: [...b.dependencies],
+    registryDependencies: [...b.registryDependencies],
+  }
+}
+
+function copyTemplateMeta(t: TemplateMeta): TemplateMeta {
+  return {
+    ...t,
+    blocks: [...t.blocks],
+    files: [...t.files],
+  }
 }
 
 /**
@@ -120,14 +142,14 @@ export function getBlockMeta(slug: string): BlockMeta | null {
  */
 export function listBlocks(category?: string): BlockMeta[] {
   if (category) {
-    return blocks.filter((b) => b.category === category).map((b) => ({ ...b }))
+    return blocks.filter((b) => b.category === category).map(copyBlockMeta)
   }
-  return blocks.map((b) => ({ ...b }))
+  return blocks.map(copyBlockMeta)
 }
 
 /**
  * List all templates in the registry.
  */
 export function listTemplates(): TemplateMeta[] {
-  return templates.map((t) => ({ ...t }))
+  return templates.map(copyTemplateMeta)
 }
