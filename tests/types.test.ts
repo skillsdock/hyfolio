@@ -12,10 +12,10 @@ import type {
   LogosBlock,
   PricingBlock,
   ComparisonBlock,
-  CTABlock,
+  CtaBlock,
   ContactBlock,
   NewsletterBlock,
-  FAQBlock,
+  FaqBlock,
   GalleryBlock,
   BlogListBlock,
   FooterBlock,
@@ -30,14 +30,14 @@ describe('block prop types', () => {
     expectTypeOf<HeroBlock>().toHaveProperty('cta')
   })
 
-  it('FeaturesBlock has items array', () => {
+  it('FeaturesBlock has features array', () => {
     expectTypeOf<FeaturesBlock>().toHaveProperty('heading')
-    expectTypeOf<FeaturesBlock>().toHaveProperty('items')
+    expectTypeOf<FeaturesBlock>().toHaveProperty('features')
   })
 
-  it('PricingBlock has tiers array', () => {
+  it('PricingBlock has plans array', () => {
     expectTypeOf<PricingBlock>().toHaveProperty('heading')
-    expectTypeOf<PricingBlock>().toHaveProperty('tiers')
+    expectTypeOf<PricingBlock>().toHaveProperty('plans')
   })
 
   it('NavbarBlock has logo and links', () => {
@@ -50,23 +50,22 @@ describe('block prop types', () => {
     expectTypeOf<FooterBlock>().toHaveProperty('copyright')
   })
 
-  it('ContactBlock has form fields config', () => {
+  it('ContactBlock has formConfig', () => {
     expectTypeOf<ContactBlock>().toHaveProperty('heading')
-    expectTypeOf<ContactBlock>().toHaveProperty('fields')
+    expectTypeOf<ContactBlock>().toHaveProperty('formConfig')
   })
 
-  it('FAQBlock has items with question and answer', () => {
-    expectTypeOf<FAQBlock>().toHaveProperty('heading')
-    expectTypeOf<FAQBlock>().toHaveProperty('items')
+  it('FaqBlock has items with question and answer', () => {
+    expectTypeOf<FaqBlock>().toHaveProperty('heading')
+    expectTypeOf<FaqBlock>().toHaveProperty('items')
   })
 
-  it('TestimonialsBlock has items array', () => {
+  it('TestimonialsBlock has testimonials array', () => {
     expectTypeOf<TestimonialsBlock>().toHaveProperty('heading')
-    expectTypeOf<TestimonialsBlock>().toHaveProperty('items')
+    expectTypeOf<TestimonialsBlock>().toHaveProperty('testimonials')
   })
 
   it('all block types are importable', () => {
-    // This test passes if the file compiles -- verifies every export exists
     expectTypeOf<NavbarBlock>().toBeObject()
     expectTypeOf<HeroBlock>().toBeObject()
     expectTypeOf<FeaturesBlock>().toBeObject()
@@ -79,10 +78,10 @@ describe('block prop types', () => {
     expectTypeOf<LogosBlock>().toBeObject()
     expectTypeOf<PricingBlock>().toBeObject()
     expectTypeOf<ComparisonBlock>().toBeObject()
-    expectTypeOf<CTABlock>().toBeObject()
+    expectTypeOf<CtaBlock>().toBeObject()
     expectTypeOf<ContactBlock>().toBeObject()
     expectTypeOf<NewsletterBlock>().toBeObject()
-    expectTypeOf<FAQBlock>().toBeObject()
+    expectTypeOf<FaqBlock>().toBeObject()
     expectTypeOf<GalleryBlock>().toBeObject()
     expectTypeOf<BlogListBlock>().toBeObject()
     expectTypeOf<FooterBlock>().toBeObject()

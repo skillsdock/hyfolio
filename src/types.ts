@@ -29,7 +29,6 @@ export type RichText = Record<string, unknown>
 
 export interface NavbarBlock {
   logo: PayloadMedia | null
-  logoText?: string
   links: LinkField[]
   cta?: LinkField | null
 }
@@ -41,7 +40,7 @@ export interface NavbarBlock {
 export interface HeroBlock {
   heading: string
   subheading?: string
-  description?: RichText
+  description?: RichText | string
   image?: PayloadMedia | null
   cta?: LinkField | null
 }
@@ -53,31 +52,33 @@ export interface HeroBlock {
 export interface FeaturesBlock {
   heading?: string
   description?: string
-  items: Array<{
+  features: Array<{
     icon?: string
     title: string
-    description: string
+    description?: string
   }>
 }
 
 export interface ContentBlock {
   heading?: string
-  content: RichText
+  body: RichText | string
 }
 
 export interface StatsBlock {
   heading?: string
-  items: Array<{
+  stats: Array<{
     value: string
     label: string
+    prefix?: string
+    suffix?: string
   }>
 }
 
 export interface DetailsBlock {
   heading: string
-  description?: RichText
+  description?: RichText | string
   image?: PayloadMedia | null
-  imagePosition?: 'left' | 'right'
+  layout?: 'imageRight' | 'imageLeft'
 }
 
 export interface TeamBlock {
@@ -85,7 +86,7 @@ export interface TeamBlock {
   description?: string
   members: Array<{
     name: string
-    role: string
+    role?: string
     image?: PayloadMedia | null
     bio?: string
     socials?: Array<{
@@ -100,7 +101,7 @@ export interface TimelineBlock {
   items: Array<{
     date: string
     title: string
-    description: string
+    description?: string
   }>
 }
 
@@ -110,20 +111,20 @@ export interface TimelineBlock {
 
 export interface TestimonialsBlock {
   heading?: string
-  items: Array<{
+  testimonials: Array<{
     quote: string
-    author: string
-    role?: string
+    authorName: string
+    authorRole?: string
+    authorImage?: PayloadMedia | null
     company?: string
-    avatar?: PayloadMedia | null
   }>
 }
 
 export interface LogosBlock {
   heading?: string
   logos: Array<{
-    name: string
     image: PayloadMedia
+    alt?: string
     href?: string
   }>
 }
@@ -135,23 +136,28 @@ export interface LogosBlock {
 export interface PricingBlock {
   heading?: string
   description?: string
-  tiers: Array<{
+  plans: Array<{
     name: string
     price: string
-    interval?: string
-    description?: string
-    features: string[]
-    cta: LinkField
+    billingPeriod?: string
+    features?: Array<{ text: string }>
+    cta?: LinkField | null
     highlighted?: boolean
   }>
 }
 
 export interface ComparisonBlock {
   heading?: string
-  columns: string[]
+  plans: Array<{
+    name: string
+    highlighted?: boolean
+  }>
   features: Array<{
     name: string
-    values: Record<string, boolean | string>
+    values?: Array<{
+      value?: string
+      included?: boolean
+    }>
   }>
 }
 
@@ -159,41 +165,44 @@ export interface ComparisonBlock {
 // Conversion
 // -------------------------------------------------------------------------
 
-export interface CTABlock {
+export interface CtaBlock {
   heading: string
   description?: string
-  cta: LinkField
-  secondaryCta?: LinkField | null
+  primaryButton?: LinkField | null
+  secondaryButton?: LinkField | null
 }
 
 export interface ContactBlock {
   heading?: string
   description?: string
-  fields: Array<{
-    name: string
-    label: string
-    type: 'text' | 'email' | 'textarea'
-    required?: boolean
-  }>
-  submitLabel?: string
+  formConfig?: {
+    submitLabel?: string
+    successMessage?: string
+    fields?: {
+      showPhone?: boolean
+      showCompany?: boolean
+    }
+  }
 }
 
 export interface NewsletterBlock {
-  heading?: string
+  heading: string
   description?: string
   placeholder?: string
-  submitLabel?: string
+  buttonText?: string
+  successMessage?: string
 }
 
 // -------------------------------------------------------------------------
 // Structure
 // -------------------------------------------------------------------------
 
-export interface FAQBlock {
+export interface FaqBlock {
   heading?: string
+  description?: string
   items: Array<{
     question: string
-    answer: string
+    answer: RichText | string
   }>
 }
 
@@ -203,26 +212,31 @@ export interface GalleryBlock {
     image: PayloadMedia
     caption?: string
   }>
+  columns?: '2' | '3' | '4'
 }
 
 export interface BlogListBlock {
   heading?: string
-  showExcerpt?: boolean
+  description?: string
   postsPerPage?: number
+  showExcerpt?: boolean
+  showDate?: boolean
+  showAuthor?: boolean
 }
 
 export interface FooterBlock {
-  logo?: PayloadMedia | null
-  columns: Array<{
+  columns?: Array<{
     title: string
-    links: LinkField[]
+    links?: Array<{
+      label: string
+      href: string
+    }>
   }>
+  copyright?: string
   socials?: Array<{
     platform: string
     url: string
-    icon?: string
   }>
-  copyright: string
 }
 
 // -------------------------------------------------------------------------
@@ -242,10 +256,10 @@ export type AnyBlock =
   | ({ blockType: 'logos' } & LogosBlock)
   | ({ blockType: 'pricing' } & PricingBlock)
   | ({ blockType: 'comparison' } & ComparisonBlock)
-  | ({ blockType: 'cta' } & CTABlock)
+  | ({ blockType: 'cta' } & CtaBlock)
   | ({ blockType: 'contact' } & ContactBlock)
   | ({ blockType: 'newsletter' } & NewsletterBlock)
-  | ({ blockType: 'faq' } & FAQBlock)
+  | ({ blockType: 'faq' } & FaqBlock)
   | ({ blockType: 'gallery' } & GalleryBlock)
   | ({ blockType: 'blog-list' } & BlogListBlock)
   | ({ blockType: 'footer' } & FooterBlock)

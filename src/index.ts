@@ -19,10 +19,10 @@ export type {
   LogosBlock,
   PricingBlock,
   ComparisonBlock,
-  CTABlock,
+  CtaBlock,
   ContactBlock,
   NewsletterBlock,
-  FAQBlock,
+  FaqBlock,
   GalleryBlock,
   BlogListBlock,
   FooterBlock,
@@ -62,3 +62,16 @@ export {
 // Block renderer (also available via 'hyfolio/render' sub-export)
 export { createBlockRenderer } from './render.js'
 export type { BlockComponentMap } from './render.js'
+
+// Theme
+export { themeSchema, type ThemeConfig } from './theme/schema.js'
+export { generateThemeCSS } from './theme/generator.js'
+export { hyfolioPreset } from './theme/tailwind-preset.js'
+
+// Primitives
+export { HyfButton } from './primitives/button.js'
+export { HyfCard } from './primitives/card.js'
+export { HyfLoader, HyfInlineLoader } from './primitives/loader.js'
+export { HyfBadge } from './primitives/badge.js'
+export { HyfContainer } from './primitives/container.js'
+export { HyfSection } from './primitives/section.js'
