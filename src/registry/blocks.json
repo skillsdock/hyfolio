@@ -1,0 +1,176 @@
+{
+  "$schema": "./blocks-schema.json",
+  "blocks": [
+    {
+      "slug": "navbar",
+      "name": "Navbar",
+      "description": "Responsive navigation bar with logo, links, and mobile menu.",
+      "category": "navigation",
+      "files": ["blocks/navbar/component.tsx", "blocks/navbar/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "hero",
+      "name": "Hero",
+      "description": "Full-width hero section with heading, subheading, description, image, and call-to-action.",
+      "category": "hero",
+      "files": ["blocks/hero/component.tsx", "blocks/hero/payload.ts"],
+      "dependencies": ["@payloadcms/richtext-lexical"],
+      "registryDependencies": []
+    },
+    {
+      "slug": "features",
+      "name": "Features",
+      "description": "Grid of feature cards with icon, title, and description.",
+      "category": "content",
+      "files": ["blocks/features/component.tsx", "blocks/features/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "content",
+      "name": "Content",
+      "description": "Rich text content section for long-form prose.",
+      "category": "content",
+      "files": ["blocks/content/component.tsx", "blocks/content/payload.ts"],
+      "dependencies": ["@payloadcms/richtext-lexical"],
+      "registryDependencies": []
+    },
+    {
+      "slug": "stats",
+      "name": "Stats",
+      "description": "Row of key statistics with numbers and labels.",
+      "category": "content",
+      "files": ["blocks/stats/component.tsx", "blocks/stats/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "details",
+      "name": "Details",
+      "description": "Split layout with text on one side and media on the other.",
+      "category": "content",
+      "files": ["blocks/details/component.tsx", "blocks/details/payload.ts"],
+      "dependencies": ["@payloadcms/richtext-lexical"],
+      "registryDependencies": []
+    },
+    {
+      "slug": "team",
+      "name": "Team",
+      "description": "Team member grid with photos, names, roles, and social links.",
+      "category": "content",
+      "files": ["blocks/team/component.tsx", "blocks/team/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "timeline",
+      "name": "Timeline",
+      "description": "Vertical timeline of events with dates, titles, and descriptions.",
+      "category": "content",
+      "files": ["blocks/timeline/component.tsx", "blocks/timeline/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "testimonials",
+      "name": "Testimonials",
+      "description": "Customer testimonials with quote, author name, role, and avatar.",
+      "category": "social-proof",
+      "files": ["blocks/testimonials/component.tsx", "blocks/testimonials/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "logos",
+      "name": "Logos",
+      "description": "Client or partner logo strip with optional heading.",
+      "category": "social-proof",
+      "files": ["blocks/logos/component.tsx", "blocks/logos/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "pricing",
+      "name": "Pricing",
+      "description": "Pricing tier cards with features, price, and CTA button.",
+      "category": "commerce",
+      "files": ["blocks/pricing/component.tsx", "blocks/pricing/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "comparison",
+      "name": "Comparison",
+      "description": "Feature comparison table across plans or products.",
+      "category": "commerce",
+      "files": ["blocks/comparison/component.tsx", "blocks/comparison/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "cta",
+      "name": "CTA",
+      "description": "Call-to-action section with heading, description, and action button.",
+      "category": "conversion",
+      "files": ["blocks/cta/component.tsx", "blocks/cta/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "contact",
+      "name": "Contact",
+      "description": "Contact form with name, email, message fields and optional map.",
+      "category": "conversion",
+      "files": ["blocks/contact/component.tsx", "blocks/contact/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "newsletter",
+      "name": "Newsletter",
+      "description": "Email signup section with heading, description, and input field.",
+      "category": "conversion",
+      "files": ["blocks/newsletter/component.tsx", "blocks/newsletter/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "faq",
+      "name": "FAQ",
+      "description": "Expandable frequently asked questions accordion.",
+      "category": "structure",
+      "files": ["blocks/faq/component.tsx", "blocks/faq/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "gallery",
+      "name": "Gallery",
+      "description": "Image gallery grid with optional lightbox.",
+      "category": "structure",
+      "files": ["blocks/gallery/component.tsx", "blocks/gallery/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "blog-list",
+      "name": "Blog List",
+      "description": "Grid or list of blog post cards with title, excerpt, date, and image.",
+      "category": "structure",
+      "files": ["blocks/blog-list/component.tsx", "blocks/blog-list/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    },
+    {
+      "slug": "footer",
+      "name": "Footer",
+      "description": "Site footer with columns, links, social icons, and copyright.",
+      "category": "structure",
+      "files": ["blocks/footer/component.tsx", "blocks/footer/payload.ts"],
+      "dependencies": [],
+      "registryDependencies": []
+    }
+  ]
+}
