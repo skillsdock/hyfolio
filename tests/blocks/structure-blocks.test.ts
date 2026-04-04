@@ -1,22 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { FaqBlock } from '@/blocks/faq/payload'
+import { FAQBlock } from '@/blocks/faq/payload'
 import { GalleryBlock } from '@/blocks/gallery/payload'
 import { BlogListBlock } from '@/blocks/blog-list/payload'
 import { FooterBlock } from '@/blocks/footer/payload'
 
-describe('FaqBlock payload', () => {
+describe('FAQBlock payload', () => {
   it('has the correct slug', () => {
-    expect(FaqBlock.slug).toBe('faq')
+    expect(FAQBlock.slug).toBe('faq')
   })
 
   it('has an items array field', () => {
-    const field = FaqBlock.fields.find((f: any) => f.name === 'items')
+    const field = FAQBlock.fields.find((f: any) => f.name === 'items')
     expect(field).toBeDefined()
     expect(field!.type).toBe('array')
   })
 
   it('items have required question and answer fields', () => {
-    const field = FaqBlock.fields.find((f: any) => f.name === 'items') as any
+    const field = FAQBlock.fields.find((f: any) => f.name === 'items') as any
     const questionField = field.fields.find((f: any) => f.name === 'question')
     const answerField = field.fields.find((f: any) => f.name === 'answer')
     expect(questionField).toBeDefined()

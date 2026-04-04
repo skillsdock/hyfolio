@@ -15,7 +15,8 @@ import { adaptBlocksRegistry, adaptTemplatesRegistry } from './utils/registry-ad
 // Resolve paths to hyfolio package source
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const sourceDir = path.resolve(__dirname, '..')
+const packageRoot = path.resolve(__dirname, '../..')
+const sourceDir = path.join(packageRoot, 'src')
 
 // Load registries
 import blocksRegistryData from '../registry/blocks.json' with { type: 'json' }

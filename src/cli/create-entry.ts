@@ -12,10 +12,14 @@ import { adaptBlocksRegistry, adaptTemplatesRegistry } from './utils/registry-ad
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const sourceDir = path.resolve(__dirname, '..')
+const packageRoot = path.resolve(__dirname, '../..')
+const sourceDir = path.join(packageRoot, 'src')
 
 import blocksRegistryData from '../registry/blocks.json' with { type: 'json' }
 import templatesRegistryData from '../registry/templates.json' with { type: 'json' }
+
+// Import theme generator
+import { generateThemeCSS } from '../theme/generator.js'
 
 const blocksRegistry = adaptBlocksRegistry(blocksRegistryData.blocks)
 const templatesRegistry = adaptTemplatesRegistry(templatesRegistryData.templates)
@@ -54,11 +58,12 @@ program
       await createAction({
         projectName,
         parentDir: process.cwd(),
-        starterDir: path.join(sourceDir, '..', 'templates', 'starter'),
+        starterDir: path.join(packageRoot, 'templates', 'starter'),
         presetsDir: path.join(sourceDir, 'theme', 'presets'),
         prompt,
         exec: runCommand,
         addAction: boundAddAction,
+        generateTheme: generateThemeCSS,
       })
     } catch (error) {
       logger.error(error instanceof Error ? error.message : String(error))

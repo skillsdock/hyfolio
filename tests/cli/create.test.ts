@@ -126,6 +126,7 @@ afterEach(async () => {
 const mockRunCommand = vi.fn(async () => {})
 const mockPrompt = vi.fn()
 const mockAddAction = vi.fn(async () => {})
+const mockGenerateTheme = vi.fn(() => ':root { --hyf-background: #ffffff; }')
 
 describe('createAction', () => {
   it('creates project directory from starter template', async () => {
@@ -144,6 +145,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     expect(await fs.pathExists(projectDir)).toBe(true)
@@ -166,6 +168,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     const pkgJson = await fs.readJson(path.join(tmpDir, 'my-cool-site', 'package.json'))
@@ -186,10 +189,34 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     const theme = await fs.readFile(path.join(tmpDir, 'my-site', 'hyfolio.theme.yaml'), 'utf-8')
     expect(theme).toContain('#000000')
+  })
+
+  it('generates theme.css after copying preset', async () => {
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: false })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(mockGenerateTheme).toHaveBeenCalled()
+    expect(await fs.pathExists(path.join(tmpDir, 'my-site', 'src/lib/hyfolio/theme.css'))).toBe(true)
+    const css = await fs.readFile(path.join(tmpDir, 'my-site', 'src/lib/hyfolio/theme.css'), 'utf-8')
+    expect(css).toContain('--hyf-background')
   })
 
   it('uses postgres adapter when postgres is selected', async () => {
@@ -206,6 +233,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     const payloadConfig = await fs.readFile(path.join(tmpDir, 'my-site', 'payload.config.ts'), 'utf-8')
@@ -226,6 +254,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     expect(mockRunCommand).toHaveBeenCalledWith(
@@ -248,6 +277,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     expect(mockAddAction).toHaveBeenCalledWith(
@@ -272,6 +302,7 @@ describe('createAction', () => {
       prompt: mockPrompt,
       exec: mockRunCommand,
       addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
     })
 
     expect(mockAddAction).not.toHaveBeenCalled()
@@ -294,6 +325,7 @@ describe('createAction', () => {
         prompt: mockPrompt,
         exec: mockRunCommand,
         addAction: mockAddAction,
+        generateTheme: mockGenerateTheme,
       })
     ).rejects.toThrow('already exists')
   })

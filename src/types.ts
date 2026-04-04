@@ -165,7 +165,7 @@ export interface ComparisonBlock {
 // Conversion
 // -------------------------------------------------------------------------
 
-export interface CtaBlock {
+export interface CTABlock {
   heading: string
   description?: string
   primaryButton?: LinkField | null
@@ -197,7 +197,7 @@ export interface NewsletterBlock {
 // Structure
 // -------------------------------------------------------------------------
 
-export interface FaqBlock {
+export interface FAQBlock {
   heading?: string
   description?: string
   items: Array<{
@@ -256,10 +256,10 @@ export type AnyBlock =
   | ({ blockType: 'logos' } & LogosBlock)
   | ({ blockType: 'pricing' } & PricingBlock)
   | ({ blockType: 'comparison' } & ComparisonBlock)
-  | ({ blockType: 'cta' } & CtaBlock)
+  | ({ blockType: 'cta' } & CTABlock)
   | ({ blockType: 'contact' } & ContactBlock)
   | ({ blockType: 'newsletter' } & NewsletterBlock)
-  | ({ blockType: 'faq' } & FaqBlock)
+  | ({ blockType: 'faq' } & FAQBlock)
   | ({ blockType: 'gallery' } & GalleryBlock)
   | ({ blockType: 'blog-list' } & BlogListBlock)
   | ({ blockType: 'footer' } & FooterBlock)

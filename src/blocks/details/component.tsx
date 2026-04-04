@@ -1,6 +1,7 @@
 import type { DetailsBlock as DetailsProps } from '@/types'
 import { HyfSection } from '@/primitives/section'
 import { HyfContainer } from '@/primitives/container'
+import { HyfRichText } from '@/primitives/rich-text'
 
 export function DetailsBlock({
   heading,
@@ -19,13 +20,7 @@ export function DetailsBlock({
               {heading}
             </h2>
             {description && (
-              <div className="mt-6 text-lg text-[var(--hyf-color-muted-foreground)] leading-relaxed">
-                {typeof description === 'string' ? (
-                  <p>{description}</p>
-                ) : (
-                  <p>Rich text content</p>
-                )}
-              </div>
+              <HyfRichText content={description} className="mt-6 text-lg text-[var(--hyf-color-muted-foreground)] leading-relaxed" />
             )}
           </div>
 

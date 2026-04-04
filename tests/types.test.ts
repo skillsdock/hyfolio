@@ -12,10 +12,10 @@ import type {
   LogosBlock,
   PricingBlock,
   ComparisonBlock,
-  CtaBlock,
+  CTABlock,
   ContactBlock,
   NewsletterBlock,
-  FaqBlock,
+  FAQBlock,
   GalleryBlock,
   BlogListBlock,
   FooterBlock,
@@ -55,9 +55,9 @@ describe('block prop types', () => {
     expectTypeOf<ContactBlock>().toHaveProperty('formConfig')
   })
 
-  it('FaqBlock has items with question and answer', () => {
-    expectTypeOf<FaqBlock>().toHaveProperty('heading')
-    expectTypeOf<FaqBlock>().toHaveProperty('items')
+  it('FAQBlock has items with question and answer', () => {
+    expectTypeOf<FAQBlock>().toHaveProperty('heading')
+    expectTypeOf<FAQBlock>().toHaveProperty('items')
   })
 
   it('TestimonialsBlock has testimonials array', () => {
@@ -78,10 +78,10 @@ describe('block prop types', () => {
     expectTypeOf<LogosBlock>().toBeObject()
     expectTypeOf<PricingBlock>().toBeObject()
     expectTypeOf<ComparisonBlock>().toBeObject()
-    expectTypeOf<CtaBlock>().toBeObject()
+    expectTypeOf<CTABlock>().toBeObject()
     expectTypeOf<ContactBlock>().toBeObject()
     expectTypeOf<NewsletterBlock>().toBeObject()
-    expectTypeOf<FaqBlock>().toBeObject()
+    expectTypeOf<FAQBlock>().toBeObject()
     expectTypeOf<GalleryBlock>().toBeObject()
     expectTypeOf<BlogListBlock>().toBeObject()
     expectTypeOf<FooterBlock>().toBeObject()

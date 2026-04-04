@@ -20,11 +20,11 @@ export type BlockComponentMap = Record<
  * ```tsx
  * import { createBlockRenderer } from '@/lib/hyfolio/render'
  * import { HeroBlock } from '@/blocks/hero/component'
- * import { CtaBlock } from '@/blocks/cta/component'
+ * import { CTABlock } from '@/blocks/cta/component'
  *
  * const renderBlocks = createBlockRenderer({
  *   hero: HeroBlock,
- *   cta: CtaBlock,
+ *   cta: CTABlock,
  * })
  *
  * // In a page component:

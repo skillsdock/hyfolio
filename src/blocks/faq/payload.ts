@@ -1,6 +1,6 @@
 import type { Block } from 'payload'
 
-export const FaqBlock: Block = {
+export const FAQBlock: Block = {
   slug: 'faq',
   labels: { singular: 'FAQ', plural: 'FAQs' },
   fields: [

@@ -41,53 +41,30 @@ beforeEach(async () => {
 `
   )
 
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'shared'))
+  // Shared files live at sourceDir root (not shared/ subdirectory)
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'shared/render.tsx'),
+    path.join(hyfolioSourceDir, 'render.tsx'),
     'export function renderBlock() { return null }'
   )
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'shared/types.ts'),
+    path.join(hyfolioSourceDir, 'types.ts'),
     'export interface BlockProps { blockType: string }\nexport interface HeroBlock extends BlockProps { heading: string }\n'
   )
 
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'presets'))
+  // Presets live under theme/presets/
+  await fs.ensureDir(path.join(hyfolioSourceDir, 'theme/presets'))
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'presets/minimal.yaml'),
+    path.join(hyfolioSourceDir, 'theme/presets/minimal.yaml'),
     'colors:\n  background: "#ffffff"\n  foreground: "#0a0a0a"\n  primary: "#2563eb"\n'
-  )
-
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'payload'))
-  await fs.writeFile(
-    path.join(hyfolioSourceDir, 'payload/base-config.ts'),
-    `import { buildConfig } from 'payload'
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import path from 'path'
-import { fileURLToPath } from 'url'
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
-export default buildConfig({
-  editor: lexicalEditor(),
-  db: sqliteAdapter({ url: path.resolve(dirname, 'hyfolio.db') }),
-  collections: [
-    { slug: 'media', upload: true, fields: [] },
-    { slug: 'pages', fields: [{ name: 'blocks', type: 'blocks', blocks: [] }] },
-  ],
-  globals: [],
-  secret: process.env.PAYLOAD_SECRET || 'dev-secret',
-  typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
-})
-`
   )
 
   // Hero block source
   await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/hero'))
   await fs.writeFile(
     path.join(hyfolioSourceDir, 'blocks/hero/component.tsx'),
-    `import type { HeroBlock as HeroProps } from '@/lib/hyfolio/types'
-import { HyfSection } from '@/lib/hyfolio/primitives/section'
-import { HyfButton } from '@/lib/hyfolio/primitives/button'
+    `import type { HeroBlock as HeroProps } from '@/types'
+import { HyfSection } from '@/primitives/section'
+import { HyfButton } from '@/primitives/button'
 
 export function HeroBlock({ heading, subheading, cta }: HeroProps) {
   return (
@@ -176,6 +153,10 @@ describe('Integration: init then add', () => {
     expect(await fs.pathExists(path.join(tmpDir, 'src/lib/hyfolio/theme.css'))).toBe(true)
     expect(await fs.pathExists(path.join(tmpDir, 'src/lib/hyfolio/primitives/button.tsx'))).toBe(true)
 
+    // Verify payload.config.ts uses generated template
+    const payloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    expect(payloadConfig).toContain('buildConfig')
+
     // Step 2: Add hero block
     await addAction({
       names: ['hero'],
@@ -191,17 +172,20 @@ describe('Integration: init then add', () => {
     expect(await fs.pathExists(path.join(tmpDir, 'src/blocks/hero/payload.ts'))).toBe(true)
 
     // Verify payload.config.ts was patched
-    const payloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
-    expect(payloadConfig).toContain("import { HeroBlock } from '@/blocks/hero/payload'")
-    expect(payloadConfig).toContain('HeroBlock')
+    const updatedPayloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    expect(updatedPayloadConfig).toContain("import { HeroBlock } from '@/blocks/hero/payload'")
+    expect(updatedPayloadConfig).toContain('HeroBlock')
 
-    // Verify component content
+    // Verify imports were rewritten
     const component = await fs.readFile(
       path.join(tmpDir, 'src/blocks/hero/component.tsx'),
       'utf-8'
     )
-    expect(component).toContain('HyfSection')
-    expect(component).toContain('HyfButton')
+    expect(component).toContain("from '@/lib/hyfolio/types'")
+    expect(component).toContain("from '@/lib/hyfolio/primitives/section'")
+    expect(component).toContain("from '@/lib/hyfolio/primitives/button'")
+    expect(component).not.toContain("from '@/types'")
+    expect(component).not.toContain("from '@/primitives/")
   })
 
   it('running add twice for same block does not duplicate', async () => {

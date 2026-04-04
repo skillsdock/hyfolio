@@ -2,6 +2,7 @@ import type { HeroBlock as HeroProps } from '@/types'
 import { HyfSection } from '@/primitives/section'
 import { HyfContainer } from '@/primitives/container'
 import { HyfButton } from '@/primitives/button'
+import { HyfRichText } from '@/primitives/rich-text'
 
 export function HeroBlock({
   heading,
@@ -23,13 +24,7 @@ export function HeroBlock({
             {heading}
           </h1>
           {description && (
-            <div className="text-lg text-[var(--hyf-color-muted-foreground)] max-w-2xl leading-relaxed">
-              {typeof description === 'string' ? (
-                <p>{description}</p>
-              ) : (
-                <p>Rich text content</p>
-              )}
-            </div>
+            <HyfRichText content={description} className="text-lg text-[var(--hyf-color-muted-foreground)] max-w-2xl leading-relaxed" />
           )}
           {cta?.label && cta?.href && (
             <div className="mt-4">

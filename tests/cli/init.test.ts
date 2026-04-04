@@ -33,29 +33,15 @@ beforeEach(async () => {
   await fs.writeFile(path.join(hyfolioSourceDir, 'primitives/loader.tsx'), 'export function HyfLoader() { return <div /> }')
   await fs.writeFile(path.join(hyfolioSourceDir, 'primitives/badge.tsx'), 'export function HyfBadge() { return <span /> }')
 
-  // Shared files
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'shared'))
-  await fs.writeFile(path.join(hyfolioSourceDir, 'shared/render.tsx'), 'export function renderBlock() { return null }')
-  await fs.writeFile(path.join(hyfolioSourceDir, 'shared/types.ts'), 'export interface BlockProps { blockType: string }')
+  // Shared files live at sourceDir root (not shared/ subdirectory)
+  await fs.writeFile(path.join(hyfolioSourceDir, 'render.tsx'), 'export function renderBlock() { return null }')
+  await fs.writeFile(path.join(hyfolioSourceDir, 'types.ts'), 'export interface BlockProps { blockType: string }')
 
-  // Presets
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'presets'))
-  await fs.writeFile(path.join(hyfolioSourceDir, 'presets/minimal.yaml'), 'colors:\n  background: "#ffffff"\n  foreground: "#0a0a0a"\n')
-  await fs.writeFile(path.join(hyfolioSourceDir, 'presets/bold.yaml'), 'colors:\n  background: "#000000"\n  foreground: "#ffffff"\n')
-  await fs.writeFile(path.join(hyfolioSourceDir, 'presets/warm.yaml'), 'colors:\n  background: "#fef7ee"\n  foreground: "#1a1a1a"\n')
-
-  // Payload base config
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'payload'))
-  await fs.writeFile(
-    path.join(hyfolioSourceDir, 'payload/base-config.ts'),
-    `import { buildConfig } from 'payload'
-export default buildConfig({
-  collections: [],
-  globals: [],
-  secret: process.env.PAYLOAD_SECRET || 'dev-secret',
-})
-`
-  )
+  // Presets live under theme/presets/
+  await fs.ensureDir(path.join(hyfolioSourceDir, 'theme/presets'))
+  await fs.writeFile(path.join(hyfolioSourceDir, 'theme/presets/minimal.yaml'), 'colors:\n  background: "#ffffff"\n  foreground: "#0a0a0a"\n')
+  await fs.writeFile(path.join(hyfolioSourceDir, 'theme/presets/bold.yaml'), 'colors:\n  background: "#000000"\n  foreground: "#ffffff"\n')
+  await fs.writeFile(path.join(hyfolioSourceDir, 'theme/presets/warm.yaml'), 'colors:\n  background: "#fef7ee"\n  foreground: "#1a1a1a"\n')
 })
 
 afterEach(async () => {
@@ -161,7 +147,7 @@ describe('initAction', () => {
     expect(mockGenerateTheme).toHaveBeenCalled()
   })
 
-  it('creates payload.config.ts if not present', async () => {
+  it('creates payload.config.ts with buildConfig if not present', async () => {
     mockPrompt.mockResolvedValueOnce({ preset: 'bold' })
 
     await initAction({
@@ -173,6 +159,10 @@ describe('initAction', () => {
     })
 
     expect(await fs.pathExists(path.join(tmpDir, 'payload.config.ts'))).toBe(true)
+    const content = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    expect(content).toContain('buildConfig')
+    expect(content).toContain('lexicalEditor')
+    expect(content).toContain('sqliteAdapter')
   })
 
   it('does not overwrite existing payload.config.ts', async () => {

@@ -6,6 +6,7 @@ import { detectPackageManager, getInstallCommand, getRunCommand } from './utils/
 type PromptFn = (questions: unknown) => Promise<Record<string, unknown>>
 type RunCommandFn = (command: string, options: { cwd: string }) => Promise<void>
 type AddActionFn = (options: { names: string[]; projectDir: string; [key: string]: unknown }) => Promise<void>
+type GenerateThemeFn = (yamlContent: string) => string
 
 const SQLITE_DB_IMPORT = `import { sqliteAdapter } from '@payloadcms/db-sqlite'`
 const SQLITE_DB_CONFIG = `db: sqliteAdapter({
@@ -25,8 +26,9 @@ export async function createAction(options: {
   prompt: PromptFn
   exec: RunCommandFn
   addAction: AddActionFn
+  generateTheme: GenerateThemeFn
 }): Promise<void> {
-  const { projectName, parentDir, starterDir, presetsDir, prompt, exec: runCommand, addAction } = options
+  const { projectName, parentDir, starterDir, presetsDir, prompt, exec: runCommand, addAction, generateTheme } = options
   const projectDir = path.join(parentDir, projectName)
 
   // Check if directory already exists
@@ -87,6 +89,14 @@ export async function createAction(options: {
   const themePath = path.join(projectDir, 'hyfolio.theme.yaml')
   await fs.copy(presetPath, themePath)
   logger.step(`Applied ${preset} theme preset`)
+
+  // 3b. Generate theme.css from preset
+  const yamlContent = await fs.readFile(themePath, 'utf-8')
+  const css = generateTheme(yamlContent)
+  const libDir = path.join(projectDir, 'src/lib/hyfolio')
+  await fs.ensureDir(libDir)
+  await fs.writeFile(path.join(libDir, 'theme.css'), css)
+  logger.step('Generated theme.css')
 
   // 4. Configure database in payload.config.ts
   const payloadConfigPath = path.join(projectDir, 'payload.config.ts')

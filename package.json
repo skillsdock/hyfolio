@@ -2,6 +2,7 @@
   "name": "hyfolio",
   "version": "0.1.0",
   "description": "Beautiful, CMS-ready website blocks you own. Add what you need, customize everything.",
+  "author": "skillsdock",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -35,7 +36,8 @@
     "src/primitives",
     "src/theme/presets",
     "src/payload",
-    "templates"
+    "templates",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsup",
@@ -58,8 +60,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hyfolio/hyfolio.git"
+    "url": "https://github.com/skillsdock/hyfolio.git"
   },
+  "bugs": {
+    "url": "https://github.com/skillsdock/hyfolio/issues"
+  },
+  "homepage": "https://github.com/skillsdock/hyfolio#readme",
   "engines": {
     "node": ">=18.0.0"
   },

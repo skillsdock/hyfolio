@@ -1,24 +1,24 @@
 import { describe, it, expect } from 'vitest'
-import { CtaBlock } from '@/blocks/cta/payload'
+import { CTABlock } from '@/blocks/cta/payload'
 import { ContactBlock } from '@/blocks/contact/payload'
 import { NewsletterBlock } from '@/blocks/newsletter/payload'
 
-describe('CtaBlock payload', () => {
+describe('CTABlock payload', () => {
   it('has the correct slug', () => {
-    expect(CtaBlock.slug).toBe('cta')
+    expect(CTABlock.slug).toBe('cta')
   })
 
   it('has a required heading field', () => {
-    const field = CtaBlock.fields.find((f: any) => f.name === 'heading')
+    const field = CTABlock.fields.find((f: any) => f.name === 'heading')
     expect(field).toBeDefined()
     expect((field as any).required).toBe(true)
   })
 
   it('has primaryButton and secondaryButton groups', () => {
-    const primary = CtaBlock.fields.find(
+    const primary = CTABlock.fields.find(
       (f: any) => f.name === 'primaryButton'
     )
-    const secondary = CtaBlock.fields.find(
+    const secondary = CTABlock.fields.find(
       (f: any) => f.name === 'secondaryButton'
     )
     expect(primary).toBeDefined()

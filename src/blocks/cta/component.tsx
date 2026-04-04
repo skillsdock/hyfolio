@@ -1,14 +1,14 @@
-import type { CtaBlock as CtaProps } from '@/types'
+import type { CTABlock as CTAProps } from '@/types'
 import { HyfSection } from '@/primitives/section'
 import { HyfContainer } from '@/primitives/container'
 import { HyfButton } from '@/primitives/button'
 
-export function CtaBlock({
+export function CTABlock({
   heading,
   description,
   primaryButton,
   secondaryButton,
-}: CtaProps) {
+}: CTAProps) {
   return (
     <HyfSection className="hyf-cta bg-[var(--hyf-color-secondary)]">
       <HyfContainer>

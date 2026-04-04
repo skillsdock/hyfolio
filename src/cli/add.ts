@@ -5,6 +5,11 @@ import { logger } from './utils/logger.js'
 import { detectPackageManager, getAddCommand } from './utils/package-manager.js'
 import { addBlockImport, addBlockToArray, addGlobalImport, addGlobalToArray } from './utils/payload-patcher.js'
 
+/** Convert a config path like 'src/blocks' to an @/ import prefix like 'blocks' */
+function configPathToImportAlias(configPath: string): string {
+  return configPath.replace(/^src\//, '')
+}
+
 interface BlockRegistryEntry {
   name: string
   category: string
@@ -37,9 +42,18 @@ export async function addAction(options: {
   templatesRegistry: TemplateRegistryEntry[]
   exec: ExecFn
 }): Promise<void> {
-  const { names, projectDir, sourceDir, blocksRegistry, templatesRegistry, exec: runCommand } = options
+  const { names: rawNames, projectDir, sourceDir, blocksRegistry, templatesRegistry, exec: runCommand } = options
   const config = await loadConfig(projectDir)
   const payloadConfigPath = path.join(projectDir, config.payload)
+
+  // Strip optional "template" or "block" prefix (supports `hyfolio add template landing`)
+  const names = rawNames[0] === 'template' || rawNames[0] === 'block'
+    ? rawNames.slice(1)
+    : rawNames
+
+  if (names.length === 0) {
+    throw new Error('No block or template names provided. Run "hyfolio list" to see available options.')
+  }
 
   const allNpmDeps: Set<string> = new Set()
   const addedBlocks: string[] = []
@@ -135,7 +149,7 @@ async function addBlock(options: {
   for (const sharedFile of block.dependencies.shared) {
     const targetPath = path.join(projectDir, config.lib, sharedFile)
     if (!(await fs.pathExists(targetPath))) {
-      const sourcePath = path.join(sourceDir, 'shared', sharedFile)
+      const sourcePath = path.join(sourceDir, sharedFile)
       if (await fs.pathExists(sourcePath)) {
         await fs.copy(sourcePath, targetPath)
       }
@@ -163,14 +177,66 @@ async function addBlock(options: {
 
   // Patch payload.config.ts
   if (await fs.pathExists(payloadConfigPath)) {
+    const blocksAlias = configPathToImportAlias(config.blocks)
     await addBlockImport(payloadConfigPath, {
       name: block.payloadExportName,
-      importPath: `@/blocks/${block.name}/payload`,
+      importPath: `@/${blocksAlias}/${block.name}/payload`,
     })
     await addBlockToArray(payloadConfigPath, block.payloadExportName)
   }
 
+  // Rewrite block imports to use user project paths
+  await rewriteBlockImports(targetBlockDir, config.lib)
+
   addedBlocks.push(block.name)
+}
+
+async function rewriteBlockImports(blockDir: string, libPath: string): Promise<void> {
+  const files = await fs.readdir(blockDir)
+  const tsFiles = files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+
+  const importLibPath = configPathToImportAlias(libPath)
+
+  for (const file of tsFiles) {
+    const filePath = path.join(blockDir, file)
+    let content = await fs.readFile(filePath, 'utf-8')
+
+    // Replace @/types → @/<libPath>/types
+    content = content.replace(
+      /from\s+['"]@\/types['"]/g,
+      `from '@/${importLibPath}/types'`
+    )
+
+    // Replace @/primitives/ → @/<libPath>/primitives/
+    content = content.replace(
+      /from\s+['"]@\/primitives\//g,
+      `from '@/${importLibPath}/primitives/`
+    )
+
+    await fs.writeFile(filePath, content)
+  }
+}
+
+async function rewriteTemplateImports(
+  templateDir: string,
+  config: Awaited<ReturnType<typeof loadConfig>>
+): Promise<void> {
+  const files = await fs.readdir(templateDir)
+  const tsFiles = files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+  const blocksAlias = configPathToImportAlias(config.blocks)
+
+  for (const file of tsFiles) {
+    const filePath = path.join(templateDir, file)
+    let content = await fs.readFile(filePath, 'utf-8')
+
+    // Replace @/blocks/ → @/<blocksAlias>/ in template files
+    content = content.replace(
+      /from\s+['"]@\/blocks\//g,
+      `from '@/${blocksAlias}/`
+    )
+
+    await fs.writeFile(filePath, content)
+  }
 }
 
 async function addTemplate(options: {
@@ -219,13 +285,16 @@ async function addTemplate(options: {
 
   if (await fs.pathExists(sourceTemplateDir)) {
     await fs.copy(sourceTemplateDir, targetTemplateDir)
+    // Rewrite @/blocks/ imports in copied template files to match user config
+    await rewriteTemplateImports(targetTemplateDir, config)
   }
 
   // Patch payload.config.ts with global
   if (await fs.pathExists(payloadConfigPath)) {
+    const templatesAlias = configPathToImportAlias(config.templates)
     await addGlobalImport(payloadConfigPath, {
       name: template.globalExportName,
-      importPath: `@/templates/${template.name}/payload`,
+      importPath: `@/${templatesAlias}/${template.name}/payload`,
     })
     await addGlobalToArray(payloadConfigPath, template.globalExportName)
   }

@@ -1,6 +1,6 @@
 import type { Block } from 'payload'
 
-export const CtaBlock: Block = {
+export const CTABlock: Block = {
   slug: 'cta',
   labels: { singular: 'CTA', plural: 'CTAs' },
   fields: [

@@ -1,38 +1,43 @@
 {
-  "$schema": "./templates-schema.json",
+  "$schema": "./schema.json",
   "templates": [
     {
       "slug": "landing",
       "name": "Landing Page",
-      "description": "Full landing page with hero, features, social proof, and conversion sections.",
+      "globalExport": "LandingGlobal",
+      "description": "A complete landing page with navigation, hero, features, stats, testimonials, call-to-action, and footer.",
       "blocks": ["navbar", "hero", "features", "stats", "testimonials", "cta", "footer"],
       "files": ["templates/landing/page.tsx", "templates/landing/payload.ts"]
     },
     {
       "slug": "about",
       "name": "About Page",
-      "description": "Company about page with story, team, and timeline.",
+      "globalExport": "AboutGlobal",
+      "description": "An about page with navigation, hero, company details, team section, timeline, call-to-action, and footer.",
       "blocks": ["navbar", "hero", "details", "team", "timeline", "cta", "footer"],
       "files": ["templates/about/page.tsx", "templates/about/payload.ts"]
     },
     {
       "slug": "contact",
       "name": "Contact Page",
-      "description": "Contact page with form and frequently asked questions.",
+      "globalExport": "ContactGlobal",
+      "description": "A contact page with navigation, hero, contact form, FAQ section, and footer.",
       "blocks": ["navbar", "hero", "contact", "faq", "footer"],
       "files": ["templates/contact/page.tsx", "templates/contact/payload.ts"]
     },
     {
       "slug": "pricing",
       "name": "Pricing Page",
-      "description": "Pricing page with tiers, feature comparison, and FAQ.",
+      "globalExport": "PricingGlobal",
+      "description": "A pricing page with navigation, hero, pricing tiers, feature comparison table, FAQ, call-to-action, and footer.",
       "blocks": ["navbar", "hero", "pricing", "comparison", "faq", "cta", "footer"],
       "files": ["templates/pricing/page.tsx", "templates/pricing/payload.ts"]
     },
     {
       "slug": "blog",
       "name": "Blog Page",
-      "description": "Blog listing page with newsletter signup.",
+      "globalExport": "BlogGlobal",
+      "description": "A blog listing page with navigation, hero, post list, newsletter signup, and footer.",
       "blocks": ["navbar", "hero", "blog-list", "newsletter", "footer"],
       "files": ["templates/blog/page.tsx", "templates/blog/payload.ts"]
     }

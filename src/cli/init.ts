@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import { logger } from './utils/logger.js'
 import { detectPackageManager, getAddCommand } from './utils/package-manager.js'
+import { generatePayloadConfig } from './utils/payload-template.js'
 
 type PromptFn = (questions: unknown) => Promise<Record<string, string>>
 type RunCommandFn = (command: string, options: { cwd: string }) => Promise<void>
@@ -60,7 +61,7 @@ export async function initAction(options: {
   logger.step('Created hyfolio.config.ts')
 
   // 4. Copy theme preset as hyfolio.theme.yaml
-  const presetPath = path.join(sourceDir, 'presets', `${preset}.yaml`)
+  const presetPath = path.join(sourceDir, 'theme', 'presets', `${preset}.yaml`)
   const themePath = path.join(projectDir, 'hyfolio.theme.yaml')
   await fs.copy(presetPath, themePath)
   logger.step(`Created hyfolio.theme.yaml (${preset} preset)`)
@@ -93,7 +94,7 @@ export async function initAction(options: {
   // 7. Copy shared render.tsx and types.ts
   const sharedFiles = ['render.tsx', 'types.ts']
   for (const file of sharedFiles) {
-    const sourcePath = path.join(sourceDir, 'shared', file)
+    const sourcePath = path.join(sourceDir, file)
     const targetPath = path.join(projectDir, 'src/lib/hyfolio', file)
     if (await fs.pathExists(sourcePath)) {
       await fs.copy(sourcePath, targetPath)
@@ -110,10 +111,7 @@ export async function initAction(options: {
   // 9. Create payload.config.ts if not exists
   const payloadConfigPath = path.join(projectDir, 'payload.config.ts')
   if (!(await fs.pathExists(payloadConfigPath))) {
-    const baseConfigPath = path.join(sourceDir, 'payload', 'base-config.ts')
-    if (await fs.pathExists(baseConfigPath)) {
-      await fs.copy(baseConfigPath, payloadConfigPath)
-    }
+    await fs.writeFile(payloadConfigPath, generatePayloadConfig())
     logger.step('Created payload.config.ts')
   }
 

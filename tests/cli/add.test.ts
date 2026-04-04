@@ -59,7 +59,8 @@ export default buildConfig({
   await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/hero'))
   await fs.writeFile(
     path.join(hyfolioSourceDir, 'blocks/hero/component.tsx'),
-    `import type { HeroBlock as HeroProps } from '@/lib/hyfolio/types'
+    `import type { HeroBlock as HeroProps } from '@/types'
+import { HyfButton } from '@/primitives/button'
 
 export function HeroBlock({ heading }: HeroProps) {
   return <section className="hyf-hero"><h1>{heading}</h1></section>
@@ -80,15 +81,14 @@ export const HeroBlock: Block = {
 `
   )
 
-  // Set up hyfolio shared files
-  await fs.ensureDir(path.join(hyfolioSourceDir, 'shared'))
+  // Shared files live at sourceDir root (not shared/ subdirectory)
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'shared/render.tsx'),
+    path.join(hyfolioSourceDir, 'render.tsx'),
     `export function renderBlock(block: any) { return null }
 `
   )
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'shared/types.ts'),
+    path.join(hyfolioSourceDir, 'types.ts'),
     `export interface HeroBlock { heading: string }
 `
   )
@@ -141,7 +141,7 @@ const testTemplatesRegistry = [
     name: 'landing',
     description: 'Landing page',
     blocks: ['hero', 'features'],
-    globalExportName: 'LandingPageGlobal',
+    globalExportName: 'LandingGlobal',
     files: ['page.tsx', 'payload.ts'],
   },
 ]
@@ -228,7 +228,43 @@ describe('addAction', () => {
     expect(render).toContain('customized')
   })
 
-  it('patches payload.config.ts with block import and registration', async () => {
+  it('rewrites @/types imports to use lib path', async () => {
+    await addAction({
+      names: ['hero'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const component = await fs.readFile(
+      path.join(tmpDir, 'src/blocks/hero/component.tsx'),
+      'utf-8'
+    )
+    expect(component).toContain("from '@/lib/hyfolio/types'")
+    expect(component).not.toContain("from '@/types'")
+  })
+
+  it('rewrites @/primitives imports to use lib path', async () => {
+    await addAction({
+      names: ['hero'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const component = await fs.readFile(
+      path.join(tmpDir, 'src/blocks/hero/component.tsx'),
+      'utf-8'
+    )
+    expect(component).toContain("from '@/lib/hyfolio/primitives/button'")
+    expect(component).not.toContain("from '@/primitives/button'")
+  })
+
+  it('patches payload.config.ts with block import and registration (default config)', async () => {
     await addAction({
       names: ['hero'],
       projectDir: tmpDir,
@@ -242,6 +278,7 @@ describe('addAction', () => {
       path.join(tmpDir, 'payload.config.ts'),
       'utf-8'
     )
+    // Default config: blocks at src/blocks → import alias @/blocks
     expect(payloadConfig).toContain("import { HeroBlock } from '@/blocks/hero/payload'")
     expect(payloadConfig).toContain('blocks: [HeroBlock]')
   })
@@ -320,5 +357,220 @@ describe('addAction', () => {
 
     expect(await fs.pathExists(path.join(tmpDir, 'src/blocks/hero/component.tsx'))).toBe(true)
     expect(await fs.pathExists(path.join(tmpDir, 'src/blocks/features/component.tsx'))).toBe(true)
+  })
+
+  it('strips "block" prefix from names (hyfolio add block hero)', async () => {
+    await addAction({
+      names: ['block', 'hero'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    expect(await fs.pathExists(path.join(tmpDir, 'src/blocks/hero/component.tsx'))).toBe(true)
+  })
+
+  it('strips "template" prefix from names (hyfolio add template landing)', async () => {
+    // Set up template source files
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'templates/landing'))
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/payload.ts'),
+      `import { HeroBlock } from '@/blocks/hero/payload'\nexport const LandingGlobal = { slug: 'landing', fields: [] }`
+    )
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/page.tsx'),
+      `import { HeroBlock } from '@/blocks/hero/component'\nexport function LandingPage() { return <div /> }`
+    )
+
+    // Set up required block sources
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/features'))
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/component.tsx'), 'export function F() {}')
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/payload.ts'), 'export const FeaturesBlock = {}')
+
+    await addAction({
+      names: ['template', 'landing'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    expect(await fs.pathExists(path.join(tmpDir, 'src/templates/landing/payload.ts'))).toBe(true)
+  })
+
+  it('errors when only "template" or "block" prefix with no names after', async () => {
+    await expect(
+      addAction({
+        names: ['template'],
+        projectDir: tmpDir,
+        sourceDir: hyfolioSourceDir,
+        blocksRegistry: testBlocksRegistry,
+        templatesRegistry: testTemplatesRegistry,
+        exec: mockRunCommand,
+      })
+    ).rejects.toThrow('No block or template names provided')
+  })
+
+  it('uses config-aware import paths for blocks in payload.config.ts', async () => {
+    // Write custom config with non-default blocks path
+    await fs.writeFile(
+      path.join(tmpDir, 'hyfolio.config.ts'),
+      `export default {
+  blocks: 'src/custom-blocks',
+  templates: 'src/templates',
+  lib: 'src/lib/hyfolio',
+  styling: { framework: 'tailwind', theme: 'hyfolio.theme.yaml' },
+  payload: 'payload.config.ts',
+}`
+    )
+    await fs.ensureDir(path.join(tmpDir, 'src/custom-blocks'))
+
+    await addAction({
+      names: ['hero'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const payloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    expect(payloadConfig).toContain("from '@/custom-blocks/hero/payload'")
+    expect(payloadConfig).not.toContain("from '@/blocks/hero/payload'")
+  })
+
+  it('uses config-aware import paths for templates in payload.config.ts', async () => {
+    // Write custom config with non-default templates path
+    await fs.writeFile(
+      path.join(tmpDir, 'hyfolio.config.ts'),
+      `export default {
+  blocks: 'src/blocks',
+  templates: 'src/page-templates',
+  lib: 'src/lib/hyfolio',
+  styling: { framework: 'tailwind', theme: 'hyfolio.theme.yaml' },
+  payload: 'payload.config.ts',
+}`
+    )
+    await fs.ensureDir(path.join(tmpDir, 'src/page-templates'))
+
+    // Set up template source files
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'templates/landing'))
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/payload.ts'),
+      `import { HeroBlock } from '@/blocks/hero/payload'\nexport const LandingGlobal = { slug: 'landing', fields: [] }`
+    )
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/page.tsx'),
+      `export function LandingPage() { return <div /> }`
+    )
+
+    // Set up required block sources
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/features'))
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/component.tsx'), 'export function F() {}')
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/payload.ts'), 'export const FeaturesBlock = {}')
+
+    await addAction({
+      names: ['landing'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const payloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    expect(payloadConfig).toContain("from '@/page-templates/landing/payload'")
+    expect(payloadConfig).not.toContain("from '@/templates/landing/payload'")
+  })
+
+  it('rewrites @/blocks/ imports in copied template files', async () => {
+    // Write custom config with non-default blocks path
+    await fs.writeFile(
+      path.join(tmpDir, 'hyfolio.config.ts'),
+      `export default {
+  blocks: 'src/custom-blocks',
+  templates: 'src/templates',
+  lib: 'src/lib/hyfolio',
+  styling: { framework: 'tailwind', theme: 'hyfolio.theme.yaml' },
+  payload: 'payload.config.ts',
+}`
+    )
+    await fs.ensureDir(path.join(tmpDir, 'src/custom-blocks'))
+
+    // Set up template source files with @/blocks imports
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'templates/landing'))
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/payload.ts'),
+      `import { HeroBlock } from '@/blocks/hero/payload'\nimport { FeaturesBlock } from '@/blocks/features/payload'\nexport const LandingGlobal = { slug: 'landing', fields: [] }`
+    )
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/page.tsx'),
+      `import { HeroBlock } from '@/blocks/hero/component'\nexport function LandingPage() { return <div /> }`
+    )
+
+    // Set up required block sources
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/features'))
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/component.tsx'), 'export function F() {}')
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/payload.ts'), 'export const FeaturesBlock = {}')
+
+    await addAction({
+      names: ['landing'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const templatePayload = await fs.readFile(
+      path.join(tmpDir, 'src/templates/landing/payload.ts'),
+      'utf-8'
+    )
+    expect(templatePayload).toContain("from '@/custom-blocks/hero/payload'")
+    expect(templatePayload).toContain("from '@/custom-blocks/features/payload'")
+    expect(templatePayload).not.toContain("from '@/blocks/")
+
+    const templatePage = await fs.readFile(
+      path.join(tmpDir, 'src/templates/landing/page.tsx'),
+      'utf-8'
+    )
+    expect(templatePage).toContain("from '@/custom-blocks/hero/component'")
+    expect(templatePage).not.toContain("from '@/blocks/")
+  })
+
+  it('patches payload.config.ts with correct global export name from registry', async () => {
+    // Set up template source files
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'templates/landing'))
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/payload.ts'),
+      `export const LandingGlobal = { slug: 'landing', fields: [] }`
+    )
+    await fs.writeFile(
+      path.join(hyfolioSourceDir, 'templates/landing/page.tsx'),
+      `export function LandingPage() { return <div /> }`
+    )
+
+    // Set up required block sources
+    await fs.ensureDir(path.join(hyfolioSourceDir, 'blocks/features'))
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/component.tsx'), 'export function F() {}')
+    await fs.writeFile(path.join(hyfolioSourceDir, 'blocks/features/payload.ts'), 'export const FeaturesBlock = {}')
+
+    await addAction({
+      names: ['landing'],
+      projectDir: tmpDir,
+      sourceDir: hyfolioSourceDir,
+      blocksRegistry: testBlocksRegistry,
+      templatesRegistry: testTemplatesRegistry,
+      exec: mockRunCommand,
+    })
+
+    const payloadConfig = await fs.readFile(path.join(tmpDir, 'payload.config.ts'), 'utf-8')
+    // Should use LandingGlobal (from registry), not LandingPageGlobal (old derived name)
+    expect(payloadConfig).toContain("import { LandingGlobal }")
+    expect(payloadConfig).toContain('globals: [LandingGlobal]')
+    expect(payloadConfig).not.toContain('LandingPageGlobal')
   })
 })

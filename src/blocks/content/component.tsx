@@ -1,6 +1,7 @@
 import type { ContentBlock as ContentProps } from '@/types'
 import { HyfSection } from '@/primitives/section'
 import { HyfContainer } from '@/primitives/container'
+import { HyfRichText } from '@/primitives/rich-text'
 
 export function ContentBlock({ heading, body }: ContentProps) {
   return (
@@ -12,13 +13,7 @@ export function ContentBlock({ heading, body }: ContentProps) {
               {heading}
             </h2>
           )}
-          <div className="prose prose-lg max-w-none text-[var(--hyf-color-foreground)]">
-            {typeof body === 'string' ? (
-              <p>{body}</p>
-            ) : (
-              <p>Rich text content</p>
-            )}
-          </div>
+          <HyfRichText content={body} className="prose prose-lg max-w-none text-[var(--hyf-color-foreground)]" />
         </div>
       </HyfContainer>
     </HyfSection>

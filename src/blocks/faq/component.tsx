@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import type { FaqBlock as FaqProps } from '@/types'
+import type { FAQBlock as FAQProps } from '@/types'
 import { HyfSection } from '@/primitives/section'
 import { HyfContainer } from '@/primitives/container'
+import { HyfRichText } from '@/primitives/rich-text'
 
-export function FaqBlock({ heading, description, items }: FaqProps) {
+export function FAQBlock({ heading, description, items }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   function toggleItem(index: number) {
@@ -63,13 +64,7 @@ export function FaqBlock({ heading, description, items }: FaqProps) {
                     </svg>
                   </button>
                   {isOpen && (
-                    <div className="mt-3 text-[var(--hyf-color-muted-foreground)] leading-relaxed pr-12">
-                      {typeof item.answer === 'string' ? (
-                        <p>{item.answer}</p>
-                      ) : (
-                        <p>Rich text content</p>
-                      )}
-                    </div>
+                    <HyfRichText content={item.answer} className="mt-3 text-[var(--hyf-color-muted-foreground)] leading-relaxed pr-12" />
                   )}
                 </div>
               )

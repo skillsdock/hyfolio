@@ -11,9 +11,32 @@ interface RawBlock {
 interface RawTemplate {
   slug: string
   name: string
+  globalExport: string
   description: string
   blocks: string[]
   files: string[]
+}
+
+const BLOCK_PRIMITIVES: Record<string, string[]> = {
+  hero: ['button.tsx', 'section.tsx', 'container.tsx'],
+  features: ['section.tsx', 'container.tsx', 'card.tsx'],
+  content: ['section.tsx', 'container.tsx'],
+  stats: ['section.tsx', 'container.tsx'],
+  details: ['section.tsx', 'container.tsx'],
+  team: ['section.tsx', 'container.tsx', 'card.tsx'],
+  timeline: ['section.tsx', 'container.tsx'],
+  testimonials: ['section.tsx', 'container.tsx', 'card.tsx'],
+  logos: ['section.tsx', 'container.tsx'],
+  pricing: ['section.tsx', 'container.tsx', 'card.tsx', 'button.tsx', 'badge.tsx'],
+  comparison: ['section.tsx', 'container.tsx'],
+  cta: ['section.tsx', 'container.tsx', 'button.tsx'],
+  contact: ['section.tsx', 'container.tsx', 'button.tsx'],
+  newsletter: ['section.tsx', 'container.tsx', 'button.tsx'],
+  faq: ['section.tsx', 'container.tsx'],
+  gallery: ['section.tsx', 'container.tsx'],
+  'blog-list': ['section.tsx', 'container.tsx', 'card.tsx'],
+  footer: ['container.tsx'],
+  navbar: ['container.tsx', 'button.tsx'],
 }
 
 export function adaptBlocksRegistry(blocks: RawBlock[]) {
@@ -27,7 +50,7 @@ export function adaptBlocksRegistry(blocks: RawBlock[]) {
     dependencies: {
       npm: b.dependencies,
       shared: ['render.tsx', 'types.ts'],
-      primitives: [],
+      primitives: BLOCK_PRIMITIVES[b.slug] ?? [],
     },
   }))
 }
@@ -37,7 +60,7 @@ export function adaptTemplatesRegistry(templates: RawTemplate[]) {
     name: t.slug,
     description: t.description,
     blocks: t.blocks,
-    globalExportName: `${t.name.replace(/\s+/g, '')}Global`,
+    globalExportName: t.globalExport,
     files: t.files,
   }))
 }
