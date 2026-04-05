@@ -100,7 +100,11 @@ export async function addAction(options: {
     const pm = detectPackageManager(projectDir)
     const installCmd = getAddCommand(pm, [...allNpmDeps])
     logger.info(`Installing dependencies: ${[...allNpmDeps].join(', ')}`)
-    await runCommand(installCmd, { cwd: projectDir })
+    try {
+      await runCommand(installCmd, { cwd: projectDir })
+    } catch {
+      logger.warn(`Failed to install dependencies automatically. Run manually: ${installCmd}`)
+    }
   }
 
   // Report results

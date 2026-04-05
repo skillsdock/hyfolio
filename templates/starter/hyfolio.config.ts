@@ -1,6 +1,4 @@
-import { defineConfig } from 'hyfolio'
-
-export default defineConfig({
+export default {
   blocks: 'src/blocks',
   templates: 'src/templates',
   lib: 'src/lib/hyfolio',
@@ -9,4 +7,4 @@ export default defineConfig({
     theme: 'hyfolio.theme.yaml',
   },
   payload: 'payload.config.ts',
-})
+}

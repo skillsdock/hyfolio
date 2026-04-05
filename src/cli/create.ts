@@ -69,6 +69,11 @@ export async function createAction(options: {
   const preset = presetResponse.preset as string
   const includeExamples = examplesResponse.examples as boolean
 
+  if (!database || !preset || includeExamples === undefined) {
+    logger.error('Setup cancelled.')
+    return
+  }
+
   // 1. Copy starter template
   logger.info(`Creating ${projectName}...`)
   await fs.copy(starterDir, projectDir)

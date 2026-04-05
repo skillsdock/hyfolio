@@ -55,6 +55,11 @@ export async function initAction(options: {
 
   const preset = response.preset
 
+  if (!preset) {
+    logger.error('Setup cancelled.')
+    return
+  }
+
   // 3. Create hyfolio.config.ts
   const configPath = path.join(projectDir, 'hyfolio.config.ts')
   await fs.writeFile(configPath, HYFOLIO_CONFIG_CONTENT)
