@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import prompts from 'prompts'
 
 import { addAction } from './add.js'
+import { createAction } from './create.js'
 import { initAction } from './init.js'
 import { listAction } from './list.js'
 import { buildThemeAction } from './build-theme.js'
@@ -94,6 +95,39 @@ program
         projectDir: process.cwd(),
         blocksRegistry,
         templatesRegistry,
+      })
+    } catch (error) {
+      logger.error(error instanceof Error ? error.message : String(error))
+      process.exit(1)
+    }
+  })
+
+const boundAddAction = async (options: { names: string[]; projectDir: string; [key: string]: unknown }) => {
+  await addAction({
+    names: options.names,
+    projectDir: options.projectDir,
+    sourceDir,
+    blocksRegistry,
+    templatesRegistry,
+    exec: runCommand,
+  })
+}
+
+program
+  .command('create')
+  .description('Create a new hyfolio project')
+  .argument('<project-name>', 'name of the project to create')
+  .action(async (projectName: string) => {
+    try {
+      await createAction({
+        projectName,
+        parentDir: process.cwd(),
+        starterDir: path.join(packageRoot, 'templates', 'starter'),
+        presetsDir: path.join(sourceDir, 'theme', 'presets'),
+        prompt,
+        exec: runCommand,
+        addAction: boundAddAction,
+        generateTheme: generateThemeCSS,
       })
     } catch (error) {
       logger.error(error instanceof Error ? error.message : String(error))
