@@ -1,9 +1,35 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* hyfolio theme colors → Tailwind utilities (bg-hyf-primary, text-hyf-foreground, etc.) */
+  --color-hyf-background: var(--hyf-background);
+  --color-hyf-foreground: var(--hyf-foreground);
+  --color-hyf-primary: var(--hyf-primary);
+  --color-hyf-primary-foreground: var(--hyf-primary-foreground);
+  --color-hyf-secondary: var(--hyf-secondary);
+  --color-hyf-secondary-foreground: var(--hyf-secondary-foreground);
+  --color-hyf-muted: var(--hyf-muted);
+  --color-hyf-muted-foreground: var(--hyf-muted-foreground);
+  --color-hyf-accent: var(--hyf-accent);
+  --color-hyf-accent-foreground: var(--hyf-accent-foreground);
+  --color-hyf-border: var(--hyf-border);
+
+  /* hyfolio spacing */
+  --spacing-hyf-section: var(--hyf-section-padding);
+  --spacing-hyf-container: var(--hyf-container-padding);
+
+  /* hyfolio radius */
+  --radius-hyf-sm: var(--hyf-radius-sm);
+  --radius-hyf-md: var(--hyf-radius-md);
+  --radius-hyf-lg: var(--hyf-radius-lg);
+  --radius-hyf-full: var(--hyf-radius-full);
+}
 
 body {
   background-color: var(--hyf-background);
   color: var(--hyf-foreground);
-  font-family: var(--hyf-font-body), system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }

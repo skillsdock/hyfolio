@@ -21,33 +21,29 @@ beforeEach(async () => {
       name: '{{PROJECT_NAME}}',
       version: '0.1.0',
       private: true,
-      scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+      type: 'module',
+      scripts: { dev: 'next dev', build: 'next build', start: 'next start', lint: 'eslint' },
       dependencies: {
-        next: '^15.0.0',
+        next: '^16.2.0',
         react: '^19.0.0',
         'react-dom': '^19.0.0',
         payload: '^3.0.0',
         '@payloadcms/next': '^3.0.0',
-        '@payloadcms/richtext-lexical': '^3.0.0',
         '@payloadcms/db-sqlite': '^3.0.0',
       },
     }, null, 2)
   )
   await fs.writeFile(
     path.join(hyfolioSourceDir, 'starter/tsconfig.json'),
-    JSON.stringify({ compilerOptions: { target: 'ES2017' } })
+    JSON.stringify({ compilerOptions: { target: 'ES2017', jsx: 'react-jsx' } })
   )
   await fs.writeFile(
-    path.join(hyfolioSourceDir, 'starter/next.config.mjs'),
-    `import { withPayload } from '@payloadcms/next/withPayload'\nexport default withPayload({})\n`
-  )
-  await fs.writeFile(
-    path.join(hyfolioSourceDir, 'starter/tailwind.config.ts'),
-    `import type { Config } from 'tailwindcss'\nconst config: Config = { content: ['./src/**/*.{ts,tsx}'] }\nexport default config\n`
+    path.join(hyfolioSourceDir, 'starter/next.config.ts'),
+    `import type { NextConfig } from 'next'\nimport { withPayload } from '@payloadcms/next/withPayload'\nconst nextConfig: NextConfig = {}\nexport default withPayload(nextConfig)\n`
   )
   await fs.writeFile(
     path.join(hyfolioSourceDir, 'starter/postcss.config.mjs'),
-    `export default { plugins: { tailwindcss: {}, autoprefixer: {} } }\n`
+    `export default { plugins: { '@tailwindcss/postcss': {} } }\n`
   )
   await fs.writeFile(
     path.join(hyfolioSourceDir, 'starter/payload.config.ts'),
@@ -128,12 +124,35 @@ const mockPrompt = vi.fn()
 const mockAddAction = vi.fn(async () => {})
 const mockGenerateTheme = vi.fn(() => ':root { --hyf-background: #ffffff; }')
 
+/** Sets up mockPrompt with all 6 prompt responses */
+function setupPrompts(overrides: {
+  database?: string
+  preset?: string
+  examples?: boolean | undefined
+  packageManager?: string
+  turbopack?: boolean
+  initGit?: boolean
+} = {}) {
+  const {
+    database = 'sqlite',
+    preset = 'minimal',
+    examples = false,
+    packageManager = 'npm',
+    turbopack = false,
+    initGit = false,
+  } = overrides
+  mockPrompt
+    .mockResolvedValueOnce({ database })
+    .mockResolvedValueOnce({ preset })
+    .mockResolvedValueOnce({ examples })
+    .mockResolvedValueOnce({ packageManager })
+    .mockResolvedValueOnce({ turbopack })
+    .mockResolvedValueOnce({ initGit })
+}
+
 describe('createAction', () => {
   it('creates project directory from starter template', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: true })
+    setupPrompts({ examples: true })
 
     const projectDir = path.join(tmpDir, 'my-site')
 
@@ -150,15 +169,12 @@ describe('createAction', () => {
 
     expect(await fs.pathExists(projectDir)).toBe(true)
     expect(await fs.pathExists(path.join(projectDir, 'package.json'))).toBe(true)
-    expect(await fs.pathExists(path.join(projectDir, 'next.config.mjs'))).toBe(true)
+    expect(await fs.pathExists(path.join(projectDir, 'next.config.ts'))).toBe(true)
     expect(await fs.pathExists(path.join(projectDir, 'payload.config.ts'))).toBe(true)
   })
 
   it('replaces project name placeholder in package.json', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: 'my-cool-site',
@@ -176,10 +192,7 @@ describe('createAction', () => {
   })
 
   it('copies chosen theme preset as hyfolio.theme.yaml', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'bold' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts({ preset: 'bold' })
 
     await createAction({
       projectName: 'my-site',
@@ -197,10 +210,7 @@ describe('createAction', () => {
   })
 
   it('generates theme.css after copying preset', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: 'my-site',
@@ -220,10 +230,7 @@ describe('createAction', () => {
   })
 
   it('uses postgres adapter when postgres is selected', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'postgres' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts({ database: 'postgres' })
 
     await createAction({
       projectName: 'my-site',
@@ -241,10 +248,7 @@ describe('createAction', () => {
   })
 
   it('runs install after creating project', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: 'my-site',
@@ -264,10 +268,7 @@ describe('createAction', () => {
   })
 
   it('calls addAction with example blocks when examples selected', async () => {
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: true })
+    setupPrompts({ examples: true })
 
     await createAction({
       projectName: 'my-site',
@@ -289,10 +290,7 @@ describe('createAction', () => {
 
   it('does not call addAction when examples not selected', async () => {
     mockAddAction.mockClear()
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: 'my-site',
@@ -331,10 +329,7 @@ describe('createAction', () => {
     const dotDir = path.join(tmpDir, 'my-project')
     await fs.ensureDir(dotDir)
 
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: '.',
@@ -348,7 +343,7 @@ describe('createAction', () => {
     })
 
     expect(await fs.pathExists(path.join(dotDir, 'package.json'))).toBe(true)
-    expect(await fs.pathExists(path.join(dotDir, 'next.config.mjs'))).toBe(true)
+    expect(await fs.pathExists(path.join(dotDir, 'next.config.ts'))).toBe(true)
   })
 
   it('creates project in empty existing directory', async () => {
@@ -357,10 +352,7 @@ describe('createAction', () => {
     // Add only dotfiles (should be ignored)
     await fs.writeFile(path.join(emptyDir, '.gitkeep'), '')
 
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: 'empty-site',
@@ -380,10 +372,7 @@ describe('createAction', () => {
     const dotDir = path.join(tmpDir, 'cool-project')
     await fs.ensureDir(dotDir)
 
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     await createAction({
       projectName: '.',
@@ -426,10 +415,7 @@ describe('createAction', () => {
       }
     })
 
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+    setupPrompts()
 
     // Should not throw
     await createAction({
@@ -451,6 +437,9 @@ describe('createAction', () => {
       .mockResolvedValueOnce({ database: 'sqlite' })
       .mockResolvedValueOnce({ preset: 'minimal' })
       .mockResolvedValueOnce({ examples: undefined })
+      .mockResolvedValueOnce({ packageManager: undefined })
+      .mockResolvedValueOnce({ turbopack: undefined })
+      .mockResolvedValueOnce({ initGit: undefined })
 
     await createAction({
       projectName: 'my-site',
@@ -465,5 +454,104 @@ describe('createAction', () => {
 
     // Should not have copied the template
     expect(await fs.pathExists(path.join(tmpDir, 'my-site', 'package.json'))).toBe(false)
+  })
+
+  it('enables turbopack when selected', async () => {
+    setupPrompts({ turbopack: true })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    const pkgJson = await fs.readJson(path.join(tmpDir, 'my-site', 'package.json'))
+    expect(pkgJson.scripts.dev).toBe('next dev --turbopack')
+  })
+
+  it('generates .env with PAYLOAD_SECRET', async () => {
+    setupPrompts()
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    const envFile = await fs.readFile(path.join(tmpDir, 'my-site', '.env'), 'utf-8')
+    expect(envFile).toContain('PAYLOAD_SECRET=')
+    // Secret should be a 64-char hex string
+    const match = envFile.match(/PAYLOAD_SECRET=([a-f0-9]+)/)
+    expect(match?.[1]).toHaveLength(64)
+  })
+
+  it('includes DATABASE_URL in .env when postgres selected', async () => {
+    setupPrompts({ database: 'postgres' })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    const envFile = await fs.readFile(path.join(tmpDir, 'my-site', '.env'), 'utf-8')
+    expect(envFile).toContain('DATABASE_URL=')
+  })
+
+  it('initializes git when selected', async () => {
+    setupPrompts({ initGit: true })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(mockRunCommand).toHaveBeenCalledWith('git init', expect.objectContaining({ cwd: path.join(tmpDir, 'my-site') }))
+    expect(mockRunCommand).toHaveBeenCalledWith('git add -A', expect.objectContaining({ cwd: path.join(tmpDir, 'my-site') }))
+    expect(mockRunCommand).toHaveBeenCalledWith(
+      'git commit -m "Initial commit from hyfolio"',
+      expect.objectContaining({ cwd: path.join(tmpDir, 'my-site') })
+    )
+  })
+
+  it('uses selected package manager for install', async () => {
+    setupPrompts({ packageManager: 'pnpm' })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(mockRunCommand).toHaveBeenCalledWith(
+      'pnpm install',
+      expect.objectContaining({ cwd: path.join(tmpDir, 'my-site') })
+    )
   })
 })

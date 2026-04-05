@@ -1,12 +1,14 @@
 import path from 'path'
+import crypto from 'crypto'
 import fs from 'fs-extra'
 import { logger } from './utils/logger.js'
-import { detectPackageManager, getInstallCommand, getRunCommand } from './utils/package-manager.js'
+import { getInstallCommand, getRunCommand } from './utils/package-manager.js'
 
 type PromptFn = (questions: unknown) => Promise<Record<string, unknown>>
 type RunCommandFn = (command: string, options: { cwd: string }) => Promise<void>
 type AddActionFn = (options: { names: string[]; projectDir: string; [key: string]: unknown }) => Promise<void>
 type GenerateThemeFn = (yamlContent: string) => string
+type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun'
 
 const SQLITE_DB_IMPORT = `import { sqliteAdapter } from '@payloadcms/db-sqlite'`
 const SQLITE_DB_CONFIG = `db: sqliteAdapter({
@@ -76,9 +78,38 @@ export async function createAction(options: {
     initial: true,
   })
 
-  const database = dbResponse.database as string
-  const preset = presetResponse.preset as string
-  const includeExamples = examplesResponse.examples as boolean
+  const pmResponse = await prompt({
+    type: 'select',
+    name: 'packageManager',
+    message: 'Package manager:',
+    choices: [
+      { title: 'npm', value: 'npm' },
+      { title: 'yarn', value: 'yarn' },
+      { title: 'pnpm', value: 'pnpm' },
+      { title: 'bun', value: 'bun' },
+    ],
+  })
+
+  const turboResponse = await prompt({
+    type: 'confirm',
+    name: 'turbopack',
+    message: 'Use Turbopack for development?',
+    initial: true,
+  })
+
+  const gitResponse = await prompt({
+    type: 'confirm',
+    name: 'initGit',
+    message: 'Initialize a git repository?',
+    initial: true,
+  })
+
+  const database = dbResponse?.database as string
+  const preset = presetResponse?.preset as string
+  const includeExamples = examplesResponse?.examples as boolean
+  const pm = (pmResponse?.packageManager as PackageManager) || 'npm'
+  const useTurbopack = (turboResponse?.turbopack as boolean) ?? false
+  const initGit = (gitResponse?.initGit as boolean) ?? false
 
   if (!database || !preset || includeExamples === undefined) {
     logger.error('Setup cancelled.')
@@ -90,15 +121,29 @@ export async function createAction(options: {
   await fs.copy(starterDir, projectDir)
   logger.step('Copied project template')
 
-  // 2. Replace project name in package.json
+  // 2. Replace project name in package.json + apply turbopack
   const pkgJsonPath = path.join(projectDir, 'package.json')
   const pkgJson = await fs.readJson(pkgJsonPath)
   const updatedPkgJson = {
     ...pkgJson,
     name: packageName,
   }
+  if (useTurbopack) {
+    updatedPkgJson.scripts = { ...updatedPkgJson.scripts, dev: 'next dev --turbopack' }
+  }
   await fs.writeJson(pkgJsonPath, updatedPkgJson, { spaces: 2 })
   logger.step('Configured package.json')
+
+  // 2b. Generate .env with a secure random PAYLOAD_SECRET
+  const secret = crypto.randomBytes(32).toString('hex')
+  const envLines = [
+    `# Payload CMS`,
+    `PAYLOAD_SECRET=${secret}`,
+    '',
+    ...(database === 'postgres' ? ['# Database', 'DATABASE_URL=postgresql://localhost:5432/hyfolio', ''] : []),
+  ]
+  await fs.writeFile(path.join(projectDir, '.env'), envLines.join('\n'))
+  logger.step('Generated .env with PAYLOAD_SECRET')
 
   // 3. Copy chosen theme preset
   const presetPath = path.join(presetsDir, `${preset}.yaml`)
@@ -142,7 +187,6 @@ export async function createAction(options: {
   }
 
   // 5. Install dependencies
-  const pm = detectPackageManager(projectDir)
   const installCmd = getInstallCommand(pm)
   logger.info('Installing dependencies...')
   try {
@@ -162,7 +206,19 @@ export async function createAction(options: {
     logger.step('Added hero, features, and cta blocks')
   }
 
-  // 7. Success output
+  // 7. Initialize git repository
+  if (initGit) {
+    try {
+      await runCommand('git init', { cwd: projectDir })
+      await runCommand('git add -A', { cwd: projectDir })
+      await runCommand('git commit -m "Initial commit from hyfolio"', { cwd: projectDir })
+      logger.step('Initialized git repository')
+    } catch {
+      logger.warn('Could not initialize git repository.')
+    }
+  }
+
+  // 8. Success output
   const runCmd = getRunCommand(pm)
 
   logger.newline()
