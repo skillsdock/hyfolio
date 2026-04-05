@@ -308,13 +308,10 @@ describe('createAction', () => {
     expect(mockAddAction).not.toHaveBeenCalled()
   })
 
-  it('errors when project directory already exists', async () => {
-    await fs.ensureDir(path.join(tmpDir, 'my-site'))
-
-    mockPrompt
-      .mockResolvedValueOnce({ database: 'sqlite' })
-      .mockResolvedValueOnce({ preset: 'minimal' })
-      .mockResolvedValueOnce({ examples: false })
+  it('errors when project directory already exists and is not empty', async () => {
+    const existingDir = path.join(tmpDir, 'my-site')
+    await fs.ensureDir(existingDir)
+    await fs.writeFile(path.join(existingDir, 'index.ts'), 'export {}')
 
     await expect(
       createAction({
@@ -327,6 +324,146 @@ describe('createAction', () => {
         addAction: mockAddAction,
         generateTheme: mockGenerateTheme,
       })
-    ).rejects.toThrow('already exists')
+    ).rejects.toThrow('already exists and is not empty')
+  })
+
+  it('creates project in current directory when name is "."', async () => {
+    const dotDir = path.join(tmpDir, 'my-project')
+    await fs.ensureDir(dotDir)
+
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: false })
+
+    await createAction({
+      projectName: '.',
+      parentDir: dotDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(await fs.pathExists(path.join(dotDir, 'package.json'))).toBe(true)
+    expect(await fs.pathExists(path.join(dotDir, 'next.config.mjs'))).toBe(true)
+  })
+
+  it('creates project in empty existing directory', async () => {
+    const emptyDir = path.join(tmpDir, 'empty-site')
+    await fs.ensureDir(emptyDir)
+    // Add only dotfiles (should be ignored)
+    await fs.writeFile(path.join(emptyDir, '.gitkeep'), '')
+
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: false })
+
+    await createAction({
+      projectName: 'empty-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(await fs.pathExists(path.join(emptyDir, 'package.json'))).toBe(true)
+  })
+
+  it('uses directory basename as package name for "." projects', async () => {
+    const dotDir = path.join(tmpDir, 'cool-project')
+    await fs.ensureDir(dotDir)
+
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: false })
+
+    await createAction({
+      projectName: '.',
+      parentDir: dotDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    const pkgJson = await fs.readJson(path.join(dotDir, 'package.json'))
+    expect(pkgJson.name).toBe('cool-project')
+  })
+
+  it('errors when current directory is not empty', async () => {
+    const nonEmptyDir = path.join(tmpDir, 'non-empty')
+    await fs.ensureDir(nonEmptyDir)
+    await fs.writeFile(path.join(nonEmptyDir, 'index.ts'), 'export {}')
+
+    await expect(
+      createAction({
+        projectName: '.',
+        parentDir: nonEmptyDir,
+        starterDir: path.join(hyfolioSourceDir, 'starter'),
+        presetsDir: path.join(hyfolioSourceDir, 'presets'),
+        prompt: mockPrompt,
+        exec: mockRunCommand,
+        addAction: mockAddAction,
+        generateTheme: mockGenerateTheme,
+      })
+    ).rejects.toThrow('Current directory is not empty')
+  })
+
+  it('warns but continues when npm install fails', async () => {
+    const failingRunCommand = vi.fn(async (command: string) => {
+      if (command.includes('install')) {
+        throw new Error('npm install failed')
+      }
+    })
+
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: false })
+
+    // Should not throw
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: failingRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    expect(await fs.pathExists(path.join(tmpDir, 'my-site', 'package.json'))).toBe(true)
+  })
+
+  it('returns early when prompts are cancelled', async () => {
+    mockPrompt
+      .mockResolvedValueOnce({ database: 'sqlite' })
+      .mockResolvedValueOnce({ preset: 'minimal' })
+      .mockResolvedValueOnce({ examples: undefined })
+
+    await createAction({
+      projectName: 'my-site',
+      parentDir: tmpDir,
+      starterDir: path.join(hyfolioSourceDir, 'starter'),
+      presetsDir: path.join(hyfolioSourceDir, 'presets'),
+      prompt: mockPrompt,
+      exec: mockRunCommand,
+      addAction: mockAddAction,
+      generateTheme: mockGenerateTheme,
+    })
+
+    // Should not have copied the template
+    expect(await fs.pathExists(path.join(tmpDir, 'my-site', 'package.json'))).toBe(false)
   })
 })

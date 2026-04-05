@@ -29,12 +29,23 @@ export async function createAction(options: {
   generateTheme: GenerateThemeFn
 }): Promise<void> {
   const { projectName, parentDir, starterDir, presetsDir, prompt, exec: runCommand, addAction, generateTheme } = options
-  const projectDir = path.join(parentDir, projectName)
+  const projectDir = path.resolve(parentDir, projectName)
+  const isCurrentDir = projectName === '.' || projectName === './'
 
-  // Check if directory already exists
+  // For existing directories, check they're empty
   if (await fs.pathExists(projectDir)) {
-    throw new Error(`Directory "${projectName}" already exists.`)
+    const files = await fs.readdir(projectDir)
+    const meaningful = files.filter(f => !f.startsWith('.'))
+    if (meaningful.length > 0) {
+      throw new Error(
+        isCurrentDir
+          ? 'Current directory is not empty.'
+          : `Directory "${projectName}" already exists and is not empty.`
+      )
+    }
   }
+
+  const packageName = isCurrentDir ? path.basename(path.resolve(projectDir)) : projectName
 
   // Interactive prompts
   const dbResponse = await prompt({
@@ -84,7 +95,7 @@ export async function createAction(options: {
   const pkgJson = await fs.readJson(pkgJsonPath)
   const updatedPkgJson = {
     ...pkgJson,
-    name: projectName,
+    name: packageName,
   }
   await fs.writeJson(pkgJsonPath, updatedPkgJson, { spaces: 2 })
   logger.step('Configured package.json')
@@ -134,8 +145,12 @@ export async function createAction(options: {
   const pm = detectPackageManager(projectDir)
   const installCmd = getInstallCommand(pm)
   logger.info('Installing dependencies...')
-  await runCommand(installCmd, { cwd: projectDir })
-  logger.step('Installed dependencies')
+  try {
+    await runCommand(installCmd, { cwd: projectDir })
+    logger.step('Installed dependencies')
+  } catch {
+    logger.warn(`Could not install dependencies. Run "${installCmd}" manually.`)
+  }
 
   // 6. Add example blocks if selected
   if (includeExamples) {
@@ -151,11 +166,13 @@ export async function createAction(options: {
   const runCmd = getRunCommand(pm)
 
   logger.newline()
-  logger.success(`Created ${projectName}/`)
+  logger.success(`Created ${packageName}${isCurrentDir ? '' : '/'}`)
   logger.newline()
+  const steps = isCurrentDir
+    ? [`  ${runCmd} dev`]
+    : [`  cd ${projectName}`, `  ${runCmd} dev`]
   logger.box([
-    `  cd ${projectName}`,
-    `  ${runCmd} dev`,
+    ...steps,
     '',
     `  Admin panel: http://localhost:3000/admin`,
     `  Site:        http://localhost:3000`,

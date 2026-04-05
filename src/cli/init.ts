@@ -154,6 +154,10 @@ async function ensurePayloadInstalled(
   logger.info('Payload CMS not detected. Installing...')
   const pm = detectPackageManager(projectDir)
   const installCmd = getAddCommand(pm, PAYLOAD_PACKAGES)
-  await runCommand(installCmd, { cwd: projectDir })
-  logger.step('Installed Payload CMS')
+  try {
+    await runCommand(installCmd, { cwd: projectDir })
+    logger.step('Installed Payload CMS')
+  } catch {
+    logger.warn(`Could not install Payload CMS. Run "${installCmd}" manually.`)
+  }
 }

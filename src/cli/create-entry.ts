@@ -52,7 +52,7 @@ const program = new Command()
 program
   .name('create-hyfolio')
   .description('Create a new hyfolio project')
-  .argument('<project-name>', 'name of the project to create')
+  .argument('[project-name]', 'project directory (default: current directory)', '.')
   .action(async (projectName: string) => {
     try {
       await createAction({

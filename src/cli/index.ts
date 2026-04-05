@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { execFileSync } from 'child_process'
+import { createRequire } from 'module'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import prompts from 'prompts'
@@ -46,7 +47,7 @@ const program = new Command()
 program
   .name('hyfolio')
   .description('Beautiful, CMS-ready website blocks you own')
-  .version('0.1.0')
+  .version(createRequire(import.meta.url)('../../package.json').version)
 
 program
   .command('add')
@@ -116,7 +117,7 @@ const boundAddAction = async (options: { names: string[]; projectDir: string; [k
 program
   .command('create')
   .description('Create a new hyfolio project')
-  .argument('<project-name>', 'name of the project to create')
+  .argument('[project-name]', 'project directory (default: current directory)', '.')
   .action(async (projectName: string) => {
     try {
       await createAction({
